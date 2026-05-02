@@ -71,7 +71,7 @@ export async function getRelatedArticles(
 ): Promise<Article[]> {
   const { data, error } = await supabase
     .from('articles')
-    .select('id, slug, title, category, published_at')
+    .select('*')
     .eq('category', category)
     .neq('slug', currentSlug)
     .order('published_at', { ascending: false })
