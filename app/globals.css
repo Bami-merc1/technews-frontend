@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: #08111f;
+  color: #e8f4ff;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar        { width: 4px; }
+::-webkit-scrollbar-track  { background: #08111f; }
+::-webkit-scrollbar-thumb  { background: #1a2f4a; border-radius: 2px; }
+::selection                { background: rgba(0,229,255,0.2); }
+
+.pulse-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #00ff88;
+  animation: pulseDot 1.6s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.3; transform: scale(0.75); }
+}
+
+.stagger > * {
+  opacity: 0;
+  animation: fadeUp 0.45s ease-out forwards;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.article-body { line-height: 1.8; color: #aac8e0; }
+.article-body h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #e8f4ff;
+  margin: 2rem 0 0.75rem;
+}
+.article-body p  { margin-bottom: 1.2rem; }
+.article-body a  { color: #00e5ff; text-decoration: underline; text-underline-offset: 3px; }
+.article-body code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: #0f2040;
+  border: 1px solid #1a2f4a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #00e5ff;
+}
+.article-body pre {
+  background: #0d1a2d;
+  border: 1px solid #1a2f4a;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+.article-body blockquote {
+  border-left: 3px solid #00e5ff;
+  padding-left: 1rem;
+  color: #7aa8c8;
+  font-style: italic;
+  margin: 1.25rem 0;
+}
+.article-body ul, .article-body ol { padding-left: 1.5rem; margin-bottom: 1.2rem; }
+.article-body li { margin-bottom: 0.4rem; }
