@@ -59,7 +59,7 @@ export default async function HomePage() {
           </div>
           <h1 className="font-display text-5xl md:text-6xl font-bold text-text-1 leading-tight mb-6">
             Tech news, powered<br />
-            <span className="text-accent">by AI.</span>
+            <span className="text-accent">by EMerc</span>
           </h1>
           <p className="text-text-2 text-xl max-w-2xl leading-relaxed mb-10">
             Real-time summaries of the latest in AI, cybersecurity, software,
