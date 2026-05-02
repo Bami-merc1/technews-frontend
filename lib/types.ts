@@ -31,6 +31,14 @@ export interface SafetyTips {
   }
 }
 
+export interface RelatedArticle {
+  id: string
+  slug: string
+  title: string
+  category: Category
+  published_at: string
+}
+
 export interface Article {
   id: string
   slug: string
@@ -48,10 +56,7 @@ export interface Article {
   raw_content?: string
   has_full_content?: boolean
   safety_tips: SafetyTips | null
-  related_articles?: Pick
-    Article,
-    'id' | 'slug' | 'title' | 'category' | 'published_at'
-  >[]
+  related_articles?: RelatedArticle[]
 }
 
 export interface ThreatMetrics {
