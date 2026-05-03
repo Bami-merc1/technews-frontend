@@ -59,11 +59,11 @@ export default async function HomePage() {
           </div>
           <h1 className="font-display text-5xl md:text-6xl font-bold text-text-1 leading-tight mb-6">
             Tech news, powered<br />
-            <span className="text-accent">by EMerc</span>
+            <span className="text-accent">by AI</span>
           </h1>
           <p className="text-text-2 text-xl max-w-2xl leading-relaxed mb-10">
             Real-time summaries of the latest in AI, cybersecurity, software,
-            blockchain, and hardware — aggregated and written autonomously.
+            blockchain, data-breachs and hardware — aggregated and written autonomously.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link href="/security-hub"

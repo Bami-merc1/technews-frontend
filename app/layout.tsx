@@ -29,7 +29,7 @@ export default function RootLayout({
                 <span className="text-bg font-bold text-sm">T</span>
               </div>
               <span className="font-display font-bold text-text-1 text-lg tracking-tight">
-                Tech<span className="text-accent">Pulse</span>
+                EMerc<span className="text-accent">Intel</span>
               </span>
             </Link>
 
@@ -85,7 +85,7 @@ export default function RootLayout({
                     <span className="text-bg font-bold text-sm">T</span>
                   </div>
                   <span className="font-display font-bold text-text-1 text-lg">
-                    Tech<span className="text-accent">Pulse</span>
+                    EMerc<span className="text-accent">Intel</span>
                   </span>
                 </div>
                 <p className="text-text-3 text-sm leading-relaxed">
@@ -142,7 +142,7 @@ export default function RootLayout({
             {/* Bottom bar */}
             <div className="border-t border-border mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="text-text-3 text-xs">
-                © {new Date().getFullYear()} TechPulse · Built by EMerc Secure
+                © {new Date().getFullYear()} EMercIntel · Built by EMerc Enterprise
               </p>
               <p className="text-text-3 text-xs flex items-center gap-1">
                 <span className="pulse-dot" style={{width:'6px', height:'6px'}}></span>
