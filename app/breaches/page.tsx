@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Article } from '@/lib/types'
+import NewsCard from '@/components/ui/NewsCard'
 
 const SEVERITY_CONFIG: Record<string, { label: string; styles: string; dotColor: string }> = {
   critical: { label: 'Critical', styles: 'bg-critical/10 text-critical border-critical/30', dotColor: '#ff4444' },
@@ -139,87 +140,11 @@ export default async function BreachesPage() {
         </div>
 
         {/* ── Articles ── */}
-        {articles.length > 0 ? (
-          <div className="flex flex-col gap-4 stagger">
-            {articles.map(article => {
-              const sev = article.severity ? SEVERITY_CONFIG[article.severity] : null
-              return (
-                <Link key={article.id} href={`/article/${article.slug}`}
-                  className="group bg-surface border border-border rounded-2xl p-6 hover:border-border-hi hover:bg-surface-2 transition-all block">
-
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 min-w-0">
-
-                      {/* Badges */}
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        {sev && (
-                          <span className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border ${sev.styles}`}>
-                            {(article.severity === 'critical' || article.severity === 'high') && (
-                              <span className="pulse-dot" style={{ width: '6px', height: '6px', background: sev.dotColor }}></span>
-                            )}
-                            {sev.label}
-                          </span>
-                        )}
-                        {article.cve_id && (
-                          <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-surface-2 border border-border text-text-2">
-                            {article.cve_id}
-                          </span>
-                        )}
-                        {article.safety_tips && (
-                          <span className="text-xs px-2.5 py-1 rounded-full bg-live/10 text-live border border-live/20">
-                            ✓ Safety guide
-                          </span>
-                        )}
-                        <span className="text-xs text-text-3 ml-auto">
-                          {article.source_name}
-                        </span>
-                      </div>
-
-                      {/* Title */}
-                      <h2 className="font-display font-bold text-text-1 text-lg leading-snug mb-2 group-hover:text-accent transition-colors">
-                        {article.title}
-                      </h2>
-
-                      {/* Summary */}
-                      <p className="text-text-2 text-sm leading-relaxed line-clamp-2">
-                        {article.summary}
-                      </p>
-                    </div>
-
-                    {/* Arrow */}
-                    <div className="flex-shrink-0 w-9 h-9 rounded-xl border border-border flex items-center justify-center text-text-3 group-hover:border-critical group-hover:text-critical transition-all">
-                      →
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between text-text-3 text-xs mt-4 pt-4 border-t border-border">
-                    <div className="flex items-center gap-4">
-                      <span>{timeAgo(article.published_at)}</span>
-                      <span>{article.read_time_minutes} min read</span>
-                    </div>
-                    <span className="text-critical group-hover:underline">
-                      View full incident report →
-                    </span>
-                  </div>
-
-                </Link>
-              )
-            })}
+        <div className="flex flex-col gap-4 stagger">
+            {articles.map(article => (
+              <NewsCard key={article.id} article={article} variant="horizontal" />
+            ))}
           </div>
-        ) : (
-          <div className="text-center py-24">
-            <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🛡</span>
-            </div>
-            <h3 className="font-display font-bold text-text-1 text-xl mb-2">
-              No incidents yet
-            </h3>
-            <p className="text-text-2 text-sm">
-              The aggregator is fetching breach data — check back shortly.
-            </p>
-          </div>
-        )}
 
       </div>
     </div>

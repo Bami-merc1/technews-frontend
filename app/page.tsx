@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getLatestArticles } from '@/lib/supabase'
 import { Article } from '@/lib/types'
+import NewsCard from '@/components/ui/NewsCard'
 
 const CATEGORIES = [
   { label: 'All', slug: 'all' },
@@ -11,30 +12,6 @@ const CATEGORIES = [
   { label: 'FinTech & Business', slug: 'fintech-business' },
   { label: 'Hardware', slug: 'hardware' },
 ]
-
-const SEVERITY_STYLES: Record<string, string> = {
-  critical: 'bg-critical/10 text-critical border border-critical/30',
-  high:     'bg-high/10 text-high border border-high/30',
-  medium:   'bg-medium/10 text-medium border border-medium/30',
-  low:      'bg-low/10 text-low border border-low/30',
-}
-
-const CATEGORY_STYLES: Record<string, string> = {
-  'AI/ML':                'bg-accent/10 text-accent',
-  'Cybersecurity':        'bg-critical/10 text-critical',
-  'Software Development': 'bg-live/10 text-live',
-  'Blockchain':           'bg-medium/10 text-medium',
-  'FinTech & Business':   'bg-high/10 text-high',
-  'Hardware':             'bg-purple-400/10 text-purple-400',
-}
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const h = Math.floor(diff / 3600000)
-  if (h < 1) return 'Just now'
-  if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
-}
 
 export default async function HomePage() {
   let articles: Article[] = []
@@ -63,7 +40,7 @@ export default async function HomePage() {
           </h1>
           <p className="text-text-2 text-xl max-w-2xl leading-relaxed mb-10">
             Real-time summaries of the latest in AI, cybersecurity, software,
-            blockchain, data-breachs and hardware — aggregated and written autonomously.
+            blockchain, data breaches and hardware — aggregated and written autonomously.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link href="/security-hub"
@@ -159,47 +136,11 @@ export default async function HomePage() {
         </div>
 
         {/* Articles grid */}
+        
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
             {articles.map(article => (
-              <Link key={article.id} href={`/article/${article.slug}`}
-                className="group block bg-surface border border-border rounded-2xl p-6 hover:border-border-hi hover:bg-surface-2 transition-all">
-
-                {/* Top row */}
-                <div className="flex items-center justify-between mb-4">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${CATEGORY_STYLES[article.category] ?? 'bg-surface text-text-2'}`}>
-                    {article.category}
-                  </span>
-                  {article.severity && (
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1 ${SEVERITY_STYLES[article.severity]}`}>
-                      {article.severity === 'critical' && (
-                        <span className="pulse-dot" style={{ width: '6px', height: '6px', background: '#ff4444' }}></span>
-                      )}
-                      {article.severity.charAt(0).toUpperCase() + article.severity.slice(1)}
-                    </span>
-                  )}
-                </div>
-
-                {/* Title */}
-                <h2 className="font-display font-bold text-text-1 text-lg leading-snug mb-3 group-hover:text-accent transition-colors">
-                  {article.title}
-                </h2>
-
-                {/* Summary */}
-                <p className="text-text-2 text-sm leading-relaxed mb-5 line-clamp-3">
-                  {article.summary}
-                </p>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between text-text-3 text-xs pt-4 border-t border-border">
-                  <span>{article.source_name}</span>
-                  <div className="flex items-center gap-3">
-                    <span>{article.read_time_minutes} min read</span>
-                    <span>{timeAgo(article.published_at)}</span>
-                  </div>
-                </div>
-
-              </Link>
+              <NewsCard key={article.id} article={article} />
             ))}
           </div>
         ) : (

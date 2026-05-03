@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Article } from '@/lib/types'
+import NewsCard from '@/components/ui/NewsCard'
+import SearchBar from '@/components/ui/SearchBar'
 
 const CATEGORY_STYLES: Record<string, string> = {
   'AI/ML':                'bg-accent/10 text-accent',
@@ -85,13 +87,9 @@ export default function SearchPage() {
             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search articles, topics, CVEs..."
-            className="w-full bg-surface border border-border rounded-xl pl-12 pr-4 py-4 text-text-1 placeholder-text-3 focus:outline-none focus:border-accent transition-colors text-base"
-          />
+          
+          <SearchBar value={query} onChange={setQuery} />
+
           {query && (
             <button onClick={() => setQuery('')}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-text-3 hover:text-text-1 transition-colors">
@@ -126,53 +124,11 @@ export default function SearchPage() {
         </div>
 
         {/* ── Results ── */}
-        {results.length > 0 ? (
-          <div className="flex flex-col gap-4 stagger">
+        <div className="flex flex-col gap-4 stagger">
             {results.map(article => (
-              <Link key={article.id} href={`/article/${article.slug}`}
-                className="group bg-surface border border-border rounded-2xl p-6 hover:border-border-hi hover:bg-surface-2 transition-all block">
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${CATEGORY_STYLES[article.category]}`}>
-                    {article.category}
-                  </span>
-                  {article.severity && (
-                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${SEVERITY_STYLES[article.severity]}`}>
-                      {article.severity.charAt(0).toUpperCase() + article.severity.slice(1)}
-                    </span>
-                  )}
-                </div>
-                <h2 className="font-display font-bold text-text-1 text-lg leading-snug mb-2 group-hover:text-accent transition-colors">
-                  {article.title}
-                </h2>
-                <p className="text-text-2 text-sm leading-relaxed line-clamp-2">
-                  {article.summary}
-                </p>
-                <div className="flex items-center gap-4 text-text-3 text-xs mt-4 pt-4 border-t border-border">
-                  <span>{article.source_name}</span>
-                  <span>{article.read_time_minutes} min read</span>
-                  <span>{timeAgo(article.published_at)}</span>
-                </div>
-              </Link>
+              <NewsCard key={article.id} article={article} variant="horizontal" />
             ))}
           </div>
-        ) : (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
-            </div>
-            <h3 className="font-display font-bold text-text-1 text-xl mb-2">
-              {loading ? 'Searching...' : 'No results found'}
-            </h3>
-            <p className="text-text-2 text-sm">Try a different keyword or browse by category</p>
-            <button
-              onClick={() => { setQuery(''); setActiveCategory('All') }}
-              className="mt-6 px-6 py-3 rounded-xl border border-border text-text-2 hover:border-accent hover:text-accent transition-all text-sm">
-              Clear filters
-            </button>
-          </div>
-        )}
 
       </div>
     </div>
