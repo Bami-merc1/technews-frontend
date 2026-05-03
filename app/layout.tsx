@@ -142,11 +142,11 @@ export default function RootLayout({
             {/* Bottom bar */}
             <div className="border-t border-border mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
               <p className="text-text-3 text-xs">
-                © 2025 TechPulse · Built by Bamidele Mercy · Matric No: 241701
+                © {new Date().getFullYear()} TechPulse · Built by EMerc Secure
               </p>
               <p className="text-text-3 text-xs flex items-center gap-1">
-                <span className="pulse-dot" style={{ width: '6px', height: '6px' }}></span>
-                Powered by AI · Updated in real time
+                <span className="pulse-dot" style={{width:'6px', height:'6px'}}></span>
+                Powered by EMerc Enterprise · Updated in real time through AI
               </p>
             </div>
 
