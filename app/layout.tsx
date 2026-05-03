@@ -26,7 +26,7 @@ export default function RootLayout({
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-                <span className="text-bg font-bold text-sm">T</span>
+                <span className="text-bg font-bold text-sm">EM</span>
               </div>
               <span className="font-display font-bold text-text-1 text-lg tracking-tight">
                 EMerc<span className="text-accent">Intel</span>
@@ -82,7 +82,7 @@ export default function RootLayout({
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-                    <span className="text-bg font-bold text-sm">T</span>
+                    <span className="text-bg font-bold text-sm">EM</span>
                   </div>
                   <span className="font-display font-bold text-text-1 text-lg">
                     EMerc<span className="text-accent">Intel</span>
