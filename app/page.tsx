@@ -4,13 +4,13 @@ import { Article } from '@/lib/types'
 import NewsCard from '@/components/ui/NewsCard'
 
 const CATEGORIES = [
-  { label: 'All', slug: 'all' },
-  { label: 'AI/ML', slug: 'ai-ml' },
-  { label: 'Cybersecurity', slug: 'cybersecurity' },
+  { label: 'All',                  slug: 'all' },
+  { label: 'AI/ML',                slug: 'ai-ml' },
+  { label: 'Cybersecurity',        slug: 'cybersecurity' },
   { label: 'Software Development', slug: 'software-development' },
-  { label: 'Blockchain', slug: 'blockchain' },
-  { label: 'FinTech & Business', slug: 'fintech-business' },
-  { label: 'Hardware', slug: 'hardware' },
+  { label: 'Blockchain',           slug: 'blockchain' },
+  { label: 'FinTech & Business',   slug: 'fintech-business' },
+  { label: 'Hardware',             slug: 'hardware' },
 ]
 
 export default async function HomePage() {
@@ -36,7 +36,7 @@ export default async function HomePage() {
           </div>
           <h1 className="font-display text-5xl md:text-6xl font-bold text-text-1 leading-tight mb-6">
             Tech news, powered<br />
-            <span className="text-accent">by AI</span>
+            <span className="text-accent">by EMerc</span>
           </h1>
           <p className="text-text-2 text-xl max-w-2xl leading-relaxed mb-10">
             Real-time summaries of the latest in AI, cybersecurity, software,
@@ -60,9 +60,9 @@ export default async function HomePage() {
       <section className="border-b border-border bg-surface">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap gap-8">
           {[
-            { label: 'Articles today', value: articles.length.toString() },
+            { label: 'Articles today',    value: articles.length.toString() },
             { label: 'Sources monitored', value: '120+' },
-            { label: 'Categories', value: '6' },
+            { label: 'Categories',        value: '6' },
             { label: 'Avg. publish delay', value: '< 2 min' },
           ].map(stat => (
             <div key={stat.label}>
@@ -72,8 +72,6 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-
-
 
       {/* ── Breaking Breaches Strip ── */}
       {articles.filter(a => a.category === 'Cybersecurity' && a.severity).length > 0 && (
@@ -114,8 +112,6 @@ export default async function HomePage() {
         </section>
       )}
 
-
-
       {/* ── Main content ── */}
       <section className="max-w-7xl mx-auto px-6 py-12">
 
@@ -136,7 +132,6 @@ export default async function HomePage() {
         </div>
 
         {/* Articles grid */}
-        
         {articles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
             {articles.map(article => (

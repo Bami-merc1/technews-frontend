@@ -19,16 +19,6 @@ const BREACH_FILTERS = [
   { label: 'Africa & Nigeria', value: 'africa' },
 ]
 
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const h = Math.floor(diff / 3600000)
-  const d = Math.floor(h / 24)
-  if (h < 1)  return 'Just now'
-  if (h < 24) return `${h}h ago`
-  if (d < 30) return `${d}d ago`
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-}
-
 async function getBreachArticles(): Promise<Article[]> {
   const { data } = await supabase
     .from('articles')
@@ -48,9 +38,9 @@ async function getBreachStats() {
   const all      = data ?? []
   const critical = all.filter(a => a.severity === 'critical').length
   const high     = all.filter(a => a.severity === 'high').length
-  const withCve  = all.filter(a => a.severity !== null).length
+  const withGuide = all.filter(a => a.severity !== null).length
 
-  return { total: all.length, critical, high, withCve }
+  return { total: all.length, critical, high, withGuide }
 }
 
 export default async function BreachesPage() {
@@ -67,8 +57,10 @@ export default async function BreachesPage() {
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-2xl bg-critical/10 border border-critical/30 flex items-center justify-center">
-              <svg className="w-6 h-6 text-critical" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zm-9.303-7.124c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
+              <svg className="w-6 h-6 text-critical" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M12 9v3.75m0 3.75h.008v.008H12v-.008zm-9.303-7.124c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
               </svg>
             </div>
             <div>
@@ -95,7 +87,7 @@ export default async function BreachesPage() {
             { label: 'Total incidents tracked', value: stats.total.toString(),    icon: '🗂' },
             { label: 'Critical severity',        value: stats.critical.toString(), icon: '🔴' },
             { label: 'High severity',            value: stats.high.toString(),     icon: '🟠' },
-            { label: 'With safety guides',       value: stats.withCve.toString(),  icon: '🛡' },
+            { label: 'With safety guides',       value: stats.withGuide.toString(), icon: '🛡' },
           ].map(s => (
             <div key={s.label} className="bg-surface border border-border rounded-2xl p-5">
               <div className="text-2xl mb-2">{s.icon}</div>
@@ -120,7 +112,9 @@ export default async function BreachesPage() {
 
         {/* ── Sources banner ── */}
         <div className="bg-surface border border-border rounded-xl px-5 py-3 mb-8 flex items-center gap-3 flex-wrap">
-          <span className="text-text-3 text-xs font-medium uppercase tracking-wider">Monitoring:</span>
+          <span className="text-text-3 text-xs font-medium uppercase tracking-wider">
+            Monitoring:
+          </span>
           {[
             'The Hacker News',
             'BleepingComputer',
@@ -140,11 +134,25 @@ export default async function BreachesPage() {
         </div>
 
         {/* ── Articles ── */}
-        <div className="flex flex-col gap-4 stagger">
+        {articles.length > 0 ? (
+          <div className="flex flex-col gap-4 stagger">
             {articles.map(article => (
               <NewsCard key={article.id} article={article} variant="horizontal" />
             ))}
           </div>
+        ) : (
+          <div className="text-center py-24">
+            <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🛡</span>
+            </div>
+            <h3 className="font-display font-bold text-text-1 text-xl mb-2">
+              No incidents yet
+            </h3>
+            <p className="text-text-2 text-sm">
+              The aggregator is fetching breach data — check back shortly.
+            </p>
+          </div>
+        )}
 
       </div>
     </div>

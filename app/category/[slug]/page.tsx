@@ -72,7 +72,8 @@ export default async function CategoryPage({
 
         {/* ── Category switcher ── */}
         <div className="flex gap-2 flex-wrap mb-10">
-          <Link href="/" className="px-4 py-2 rounded-full text-sm font-medium border border-border text-text-2 hover:border-accent hover:text-accent transition-all">
+          <Link href="/"
+            className="px-4 py-2 rounded-full text-sm font-medium border border-border text-text-2 hover:border-accent hover:text-accent transition-all">
             All
           </Link>
           {CATEGORIES.map(cat => (
@@ -88,12 +89,25 @@ export default async function CategoryPage({
         </div>
 
         {/* ── Articles grid ── */}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
+        {articles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger">
             {articles.map(article => (
               <NewsCard key={article.id} article={article} />
             ))}
           </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">📡</span>
+            </div>
+            <h3 className="font-display font-bold text-text-1 text-xl mb-2">No articles yet</h3>
+            <p className="text-text-2 text-sm">The AI is monitoring this category — check back soon.</p>
+            <Link href="/"
+              className="mt-6 inline-block px-6 py-3 rounded-xl border border-border text-text-2 hover:border-accent hover:text-accent transition-all text-sm">
+              Back to home
+            </Link>
+          </div>
+        )}
 
       </div>
     </div>

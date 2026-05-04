@@ -1,43 +1,26 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Article } from '@/lib/types'
 import NewsCard from '@/components/ui/NewsCard'
 import SearchBar from '@/components/ui/SearchBar'
 
-const CATEGORY_STYLES: Record<string, string> = {
-  'AI/ML':                'bg-accent/10 text-accent',
-  'Cybersecurity':        'bg-critical/10 text-critical',
-  'Software Development': 'bg-live/10 text-live',
-  'Blockchain':           'bg-medium/10 text-medium',
-  'FinTech & Business':   'bg-high/10 text-high',
-  'Hardware':             'bg-purple-400/10 text-purple-400',
-}
-
-const SEVERITY_STYLES: Record<string, string> = {
-  critical: 'bg-critical/10 text-critical border border-critical/30',
-  high:     'bg-high/10 text-high border border-high/30',
-  medium:   'bg-medium/10 text-medium border border-medium/30',
-  low:      'bg-low/10 text-low border border-low/30',
-}
-
-const CATEGORIES = ['All', 'AI/ML', 'Cybersecurity', 'Software Development', 'Blockchain', 'FinTech & Business', 'Hardware']
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const h = Math.floor(diff / 3600000)
-  if (h < 1) return 'Just now'
-  if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
-}
+const CATEGORIES = [
+  'All',
+  'AI/ML',
+  'Cybersecurity',
+  'Software Development',
+  'Blockchain',
+  'FinTech & Business',
+  'Hardware',
+]
 
 export default function SearchPage() {
-  const [query, setQuery]               = useState('')
+  const [query, setQuery]                   = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
-  const [results, setResults]           = useState<Article[]>([])
-  const [loading, setLoading]           = useState(false)
+  const [results, setResults]               = useState<Article[]>([])
+  const [loading, setLoading]               = useState(false)
 
   const search = useCallback(async () => {
     setLoading(true)
@@ -51,7 +34,6 @@ export default function SearchPage() {
       if (activeCategory !== 'All') {
         q = q.eq('category', activeCategory)
       }
-
       if (query.trim()) {
         q = q.ilike('title', `%${query}%`)
       }
@@ -65,7 +47,6 @@ export default function SearchPage() {
     }
   }, [query, activeCategory])
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(search, 400)
     return () => clearTimeout(timer)
@@ -82,20 +63,8 @@ export default function SearchPage() {
         </div>
 
         {/* ── Search bar ── */}
-        <div className="relative mb-6">
-          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-3"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          
+        <div className="mb-6">
           <SearchBar value={query} onChange={setQuery} />
-
-          {query && (
-            <button onClick={() => setQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-text-3 hover:text-text-1 transition-colors">
-              ✕
-            </button>
-          )}
         </div>
 
         {/* ── Category filter ── */}
@@ -124,11 +93,31 @@ export default function SearchPage() {
         </div>
 
         {/* ── Results ── */}
-        <div className="flex flex-col gap-4 stagger">
+        {results.length > 0 ? (
+          <div className="flex flex-col gap-4 stagger">
             {results.map(article => (
               <NewsCard key={article.id} article={article} variant="horizontal" />
             ))}
           </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-surface border border-border flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-text-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" strokeWidth={1.5}>
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+            </div>
+            <h3 className="font-display font-bold text-text-1 text-xl mb-2">
+              {loading ? 'Searching...' : 'No results found'}
+            </h3>
+            <p className="text-text-2 text-sm">Try a different keyword or browse by category</p>
+            <button
+              onClick={() => { setQuery(''); setActiveCategory('All') }}
+              className="mt-6 px-6 py-3 rounded-xl border border-border text-text-2 hover:border-accent hover:text-accent transition-all text-sm">
+              Clear filters
+            </button>
+          </div>
+        )}
 
       </div>
     </div>
