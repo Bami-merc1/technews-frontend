@@ -1,14 +1,9 @@
-import Link from 'next/link'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Article } from '@/lib/types'
 import NewsCard from '@/components/ui/NewsCard'
-
-const SEVERITY_CONFIG: Record<string, { label: string; styles: string; dotColor: string }> = {
-  critical: { label: 'Critical', styles: 'bg-critical/10 text-critical border-critical/30', dotColor: '#ff4444' },
-  high:     { label: 'High',     styles: 'bg-high/10 text-high border-high/30',             dotColor: '#ff8c00' },
-  medium:   { label: 'Medium',   styles: 'bg-medium/10 text-medium border-medium/30',       dotColor: '#f5c400' },
-  low:      { label: 'Low',      styles: 'bg-low/10 text-low border-low/30',                dotColor: '#00cc88' },
-}
 
 const BREACH_FILTERS = [
   { label: 'All incidents',    value: 'all' },
@@ -19,35 +14,47 @@ const BREACH_FILTERS = [
   { label: 'Africa & Nigeria', value: 'africa' },
 ]
 
-async function getBreachArticles(): Promise<Article[]> {
-  const { data } = await supabase
-    .from('articles')
-    .select('*')
-    .eq('category', 'Cybersecurity')
-    .order('published_at', { ascending: false })
-    .limit(50)
-  return data ?? []
+const FILTER_KEYWORDS: Record<string, string[]> = {
+  'breach':     ['breach', 'leaked', 'exposed', 'stolen', 'compromised', 'remita', 'unilag', 'inec', 'cac'],
+  'ransomware': ['ransomware', 'ransom', 'encrypted', 'lockbit', 'blackcat'],
+  'cve':        ['cve-', 'vulnerability', 'patch', 'exploit', 'rce', 'xss', 'sql injection'],
+  'zero-day':   ['zero-day', '0-day', 'zero day', 'actively exploited', 'in the wild'],
+  'africa':     ['nigeria', 'africa', 'african', 'naija', 'lagos', 'abuja', 'kenya', 'ghana', 'south africa'],
 }
 
-async function getBreachStats() {
-  const { data } = await supabase
-    .from('articles')
-    .select('severity')
-    .eq('category', 'Cybersecurity')
+export default function BreachesPage() {
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [allArticles, setAllArticles]   = useState<Article[]>([])
+  const [loading, setLoading]           = useState(true)
 
-  const all      = data ?? []
-  const critical = all.filter(a => a.severity === 'critical').length
-  const high     = all.filter(a => a.severity === 'high').length
-  const withGuide = all.filter(a => a.severity !== null).length
+  useEffect(() => {
+    async function fetchArticles() {
+      setLoading(true)
+      const { data } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('category', 'Cybersecurity')
+        .order('published_at', { ascending: false })
+        .limit(50)
+      setAllArticles(data ?? [])
+      setLoading(false)
+    }
+    fetchArticles()
+  }, [])
 
-  return { total: all.length, critical, high, withGuide }
-}
+  const filteredArticles = allArticles.filter(article => {
+    if (activeFilter === 'all') return true
+    const keywords = FILTER_KEYWORDS[activeFilter] ?? []
+    const text = (article.title + ' ' + article.summary).toLowerCase()
+    return keywords.some(kw => text.includes(kw))
+  })
 
-export default async function BreachesPage() {
-  const [articles, stats] = await Promise.all([
-    getBreachArticles(),
-    getBreachStats(),
-  ])
+  const stats = {
+    total:     allArticles.length,
+    critical:  allArticles.filter(a => a.severity === 'critical').length,
+    high:      allArticles.filter(a => a.severity === 'high').length,
+    withGuide: allArticles.filter(a => a.safety_tips !== null).length,
+  }
 
   return (
     <div className="min-h-screen bg-bg">
@@ -77,16 +84,15 @@ export default async function BreachesPage() {
           <p className="text-text-2 text-lg max-w-3xl">
             Real-time feed of data breaches, ransomware attacks, zero-day exploits,
             CVEs and cybersecurity incidents from around the world — including Africa and Nigeria.
-            Every incident is AI-processed with safety guides tailored to your level.
           </p>
         </div>
 
         {/* ── Stats ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
           {[
-            { label: 'Total incidents tracked', value: stats.total.toString(),    icon: '🗂' },
-            { label: 'Critical severity',        value: stats.critical.toString(), icon: '🔴' },
-            { label: 'High severity',            value: stats.high.toString(),     icon: '🟠' },
+            { label: 'Total incidents tracked', value: stats.total.toString(),     icon: '🗂' },
+            { label: 'Critical severity',        value: stats.critical.toString(),  icon: '🔴' },
+            { label: 'High severity',            value: stats.high.toString(),      icon: '🟠' },
             { label: 'With safety guides',       value: stats.withGuide.toString(), icon: '🛡' },
           ].map(s => (
             <div key={s.label} className="bg-surface border border-border rounded-2xl p-5">
@@ -100,13 +106,20 @@ export default async function BreachesPage() {
         {/* ── Filter tabs ── */}
         <div className="flex gap-2 flex-wrap mb-8">
           {BREACH_FILTERS.map(f => (
-            <span key={f.value}
-              className={`px-4 py-2 rounded-full text-sm font-medium border cursor-pointer transition-all
-                ${f.value === 'all'
+            <button
+              key={f.value}
+              onClick={() => setActiveFilter(f.value)}
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all
+                ${activeFilter === f.value
                   ? 'bg-critical/10 border-critical/30 text-critical'
                   : 'border-border text-text-2 hover:border-border-hi hover:text-text-1'}`}>
               {f.label}
-            </span>
+              {activeFilter === f.value && f.value !== 'all' && (
+                <span className="ml-2 text-xs opacity-70">
+                  ({filteredArticles.length})
+                </span>
+              )}
+            </button>
           ))}
         </div>
 
@@ -116,15 +129,9 @@ export default async function BreachesPage() {
             Monitoring:
           </span>
           {[
-            'The Hacker News',
-            'BleepingComputer',
-            'Krebs on Security',
-            'Dark Reading',
-            'SecurityWeek',
-            'TechCabal',
-            'Techpoint Africa',
-            'CVE Database',
-            'SANS ISC',
+            'The Hacker News', 'BleepingComputer', 'Krebs on Security',
+            'Dark Reading', 'SecurityWeek', 'TechCabal',
+            'Techpoint Africa', 'CVE Database', 'SANS ISC',
           ].map(src => (
             <span key={src} className="flex items-center gap-1.5 text-xs text-text-2">
               <span className="pulse-dot" style={{ width: '5px', height: '5px' }}></span>
@@ -134,9 +141,20 @@ export default async function BreachesPage() {
         </div>
 
         {/* ── Articles ── */}
-        {articles.length > 0 ? (
+        {loading ? (
+          <div className="flex flex-col gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-surface border border-border rounded-2xl p-6 animate-pulse">
+                <div className="h-4 bg-surface-2 rounded w-1/4 mb-4"></div>
+                <div className="h-6 bg-surface-2 rounded w-3/4 mb-3"></div>
+                <div className="h-4 bg-surface-2 rounded w-full mb-2"></div>
+                <div className="h-4 bg-surface-2 rounded w-2/3"></div>
+              </div>
+            ))}
+          </div>
+        ) : filteredArticles.length > 0 ? (
           <div className="flex flex-col gap-4 stagger">
-            {articles.map(article => (
+            {filteredArticles.map(article => (
               <NewsCard key={article.id} article={article} variant="horizontal" />
             ))}
           </div>
@@ -146,11 +164,21 @@ export default async function BreachesPage() {
               <span className="text-2xl">🛡</span>
             </div>
             <h3 className="font-display font-bold text-text-1 text-xl mb-2">
-              No incidents yet
+              No {activeFilter === 'all' ? 'incidents' : activeFilter} found
             </h3>
-            <p className="text-text-2 text-sm">
-              The aggregator is fetching breach data — check back shortly.
+            <p className="text-text-2 text-sm mb-6">
+              {activeFilter === 'all'
+                ? 'The aggregator is fetching breach data — check back shortly.'
+                : `No articles matched the "${BREACH_FILTERS.find(f => f.value === activeFilter)?.label}" filter yet.`
+              }
             </p>
+            {activeFilter !== 'all' && (
+              <button
+                onClick={() => setActiveFilter('all')}
+                className="px-6 py-3 rounded-xl border border-border text-text-2 hover:border-accent hover:text-accent transition-all text-sm">
+                Show all incidents
+              </button>
+            )}
           </div>
         )}
 
