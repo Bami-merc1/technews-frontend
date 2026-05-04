@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
+import MobileMenu from '@/components/layout/MobileMenu'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -33,7 +34,7 @@ export default function RootLayout({
               </span>
             </Link>
 
-            {/* Nav links */}
+            {/* Desktop nav links */}
             <div className="hidden md:flex items-center gap-1">
               <Link href="/" className="px-4 py-2 rounded-lg text-sm text-text-2 hover:text-text-1 hover:bg-surface transition-all">
                 Home
@@ -60,7 +61,9 @@ export default function RootLayout({
                 <span className="pulse-dot"></span>
                 <span className="text-live text-xs font-medium">Live</span>
               </div>
-              
+
+              {/* Mobile menu button */}
+              <MobileMenu />
             </div>
 
           </div>
