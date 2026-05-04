@@ -8,7 +8,7 @@ import PipelineStatus from '@/components/admin/PipelineStatus'
 import SystemMetrics from '@/components/admin/SystemMetrics'
 import ArticleQueue from '@/components/admin/ArticleQueue'
 
-const ADMIN_PASSWORD = 'emercintel2025'
+const ADMIN_PASSWORD = 'emercintel@God!sgr34t'
 
 const ERROR_LOG = [
   { time: '09:12', level: 'WARN',  message: 'NewsAPI rate limit approaching — 850/1000 calls used' },
