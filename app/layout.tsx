@@ -6,8 +6,8 @@ import Link from 'next/link'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'TechPulse — AI-Powered Tech News',
-  description: 'Real-time AI-generated technology news, cybersecurity alerts and safety guides.',
+  title: 'EMerc Intel — AI-Powered Tech News',
+  description: 'Real-time AI-generated technology news, cybersecurity alerts and safety guides by EMerc Intel.',
 }
 
 export default function RootLayout({
@@ -60,9 +60,7 @@ export default function RootLayout({
                 <span className="pulse-dot"></span>
                 <span className="text-live text-xs font-medium">Live</span>
               </div>
-              <Link href="/admin" className="px-4 py-2 rounded-lg text-sm border border-border text-text-2 hover:border-accent hover:text-accent transition-all">
-                Admin
-              </Link>
+              
             </div>
 
           </div>
@@ -124,7 +122,6 @@ export default function RootLayout({
                     { label: 'Breaches & Hacks', href: '/breaches' },
                     { label: 'Security Hub',      href: '/security-hub' },
                     { label: 'Search',            href: '/search' },
-                    { label: 'Admin Dashboard',   href: '/admin' },
                   ].map(link => (
                     <Link
                       key={link.href}
