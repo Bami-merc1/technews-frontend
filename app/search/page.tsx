@@ -110,12 +110,27 @@ export default function SearchPage() {
             <h3 className="font-display font-bold text-text-1 text-xl mb-2">
               {loading ? 'Searching...' : 'No results found'}
             </h3>
-            <p className="text-text-2 text-sm">Try a different keyword or browse by category</p>
-            <button
-              onClick={() => { setQuery(''); setActiveCategory('All') }}
-              className="mt-6 px-6 py-3 rounded-xl border border-border text-text-2 hover:border-accent hover:text-accent transition-all text-sm">
-              Clear filters
-            </button>
+            <p className="text-text-2 text-sm mb-2">
+              No articles found for <span className="text-text-1">"{query}"</span> yet.
+            </p>
+            <p className="text-text-3 text-xs mb-6">
+              Our AI pipeline checks for new articles every 15 minutes from 30+ sources.
+              If this topic was recently published, it will appear here soon.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => { setQuery(''); setActiveCategory('All') }}
+                className="px-6 py-3 rounded-xl border border-border text-text-2 hover:border-accent hover:text-accent transition-all text-sm">
+                Clear filters
+              </button>
+              
+               <a href={`https://www.google.com/search?q=${encodeURIComponent(query + ' site:thehackernews.com OR site:bleepingcomputer.com OR site:techcabal.com')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 rounded-xl border border-accent/30 text-accent hover:bg-accent/10 transition-all text-sm">
+                Search on our sources →
+              </a>
+            </div>
           </div>
         )}
 

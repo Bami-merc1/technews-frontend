@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getLatestArticles } from '@/lib/supabase'
 import { Article } from '@/lib/types'
 import NewsCard from '@/components/ui/NewsCard'
+import NewsletterSignup from '@/components/ui/NewsletterSignup'
 
 const CATEGORIES = [
   { label: 'All',                  slug: 'all' },
@@ -151,6 +152,10 @@ export default async function HomePage() {
             </p>
           </div>
         )}
+
+
+        {/* Newsletter */}
+        <NewsletterSignup />
 
       </section>
     </div>
