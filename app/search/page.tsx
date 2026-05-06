@@ -25,6 +25,16 @@ export default function SearchPage() {
   const search = useCallback(async () => {
     setLoading(true)
     try {
+      // Sanitize query — strip any HTML or injection attempts
+      const sanitizedQuery = query
+        .trim()
+        .replace(/</g, '')
+        .replace(/>/g, '')
+        .replace(/'/g, '')
+        .replace(/"/g, '')
+        .replace(/;/g, '')
+        .slice(0, 100) // max 100 chars
+
       let q = supabase
         .from('articles')
         .select('*')
@@ -34,8 +44,8 @@ export default function SearchPage() {
       if (activeCategory !== 'All') {
         q = q.eq('category', activeCategory)
       }
-      if (query.trim()) {
-        q = q.ilike('title', `%${query}%`)
+      if (sanitizedQuery) {
+        q = q.ilike('title', `%${sanitizedQuery}%`)
       }
 
       const { data } = await q
@@ -63,9 +73,11 @@ export default function SearchPage() {
         </div>
 
         {/* ── Search bar ── */}
-        <div className="mb-6">
-          <SearchBar value={query} onChange={setQuery} />
-        </div>
+        <SearchBar
+            value={query}
+            onChange={setQuery}
+            placeholder="Search articles, topics, CVEs..."
+        />
 
         {/* ── Category filter ── */}
         <div className="flex gap-2 flex-wrap mb-8">

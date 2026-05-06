@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import PipelineStatus from '@/components/admin/PipelineStatus'
 import SystemMetrics from '@/components/admin/SystemMetrics'
 import ArticleQueue from '@/components/admin/ArticleQueue'
+import { z } from 'zod'
 
 const ADMIN_PASSWORD = 'emercintel@God!sgr34t'
 
@@ -55,13 +56,27 @@ export default function AdminPage() {
     setArticleCount(count ?? 0)
   }
 
+  const loginSchema = z.string()
+    .min(1, 'Password is required')
+    .max(100, 'Password too long')
+    .refine(val => !/<|>|script/i.test(val), {
+      message: 'Invalid characters detected'
+    })
+
   function handleLogin() {
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('admin_auth', 'true')
-      setAuthenticated(true)
-      setError('')
-    } else {
-      setError('Incorrect password. Try again.')
+    try {
+      const sanitized = loginSchema.parse(password)
+      if (sanitized === ADMIN_PASSWORD) {
+        sessionStorage.setItem('admin_auth', 'true')
+        setAuthenticated(true)
+        setError('')
+      } else {
+        setError('Incorrect password. Try again.')
+      }
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        setError(err.errors[0].message)
+      }
     }
   }
 

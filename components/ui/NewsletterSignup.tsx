@@ -2,24 +2,86 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { z } from 'zod'
 
 type Mode = 'email' | 'whatsapp'
 
+// ── Validation schemas ──────────────────────────────────────────
+const emailSchema = z
+  .string()
+  .min(1, 'Email is required')
+  .email('Please enter a valid email address')
+  .max(254, 'Email is too long')
+  .refine(val => !/<|>|script|javascript|on\w+=/i.test(val), {
+    message: 'Invalid characters detected',
+  })
+
+const whatsappSchema = z
+  .string()
+  .min(7,  'Phone number is too short')
+  .max(20, 'Phone number is too long')
+  .refine(val => /^\+?[0-9\s\-()]+$/.test(val), {
+    message: 'Please enter a valid phone number',
+  })
+  .transform(val => val.replace(/\s|-|\(|\)/g, ''))
+
+function sanitize(input: string): string {
+  return input
+    .trim()
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#x27;')
+    .replace(/\//g, '&#x2F;')
+}
+
 export default function NewsletterSignup() {
-  const [mode, setMode]         = useState<Mode>('email')
-  const [value, setValue]       = useState('')
-  const [status, setStatus]     = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [message, setMessage]   = useState('')
+  const [mode, setMode]       = useState<Mode>('email')
+  const [value, setValue]     = useState('')
+  const [status, setStatus]   = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [message, setMessage] = useState('')
+  const [fieldError, setFieldError] = useState('')
+
+  function handleChange(val: string) {
+    setValue(val)
+    setFieldError('')
+    setStatus('idle')
+    setMessage('')
+  }
+
+  function validate(): string | null {
+    try {
+      if (mode === 'email') {
+        emailSchema.parse(value)
+      } else {
+        whatsappSchema.parse(value)
+      }
+      return null
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return err.errors[0].message
+      }
+      return 'Invalid input'
+    }
+  }
 
   async function handleSubscribe() {
-    if (!value.trim()) return
+    // Validate first
+    const validationError = validate()
+    if (validationError) {
+      setFieldError(validationError)
+      return
+    }
 
     setStatus('loading')
 
     try {
+      // Sanitize before storing
+      const sanitizedValue = sanitize(value.trim())
+
       const { error } = await supabase.from('subscribers').insert({
-        [mode]:  value.trim(),
-        type:    mode,
+        [mode]: sanitizedValue,
+        type:   mode,
       })
 
       if (error) {
@@ -59,13 +121,13 @@ export default function NewsletterSignup() {
         {/* Mode toggle */}
         <div className="flex items-center justify-center gap-2 p-1 bg-surface rounded-xl border border-border mb-6 w-fit mx-auto">
           <button
-            onClick={() => { setMode('email'); setValue(''); setStatus('idle') }}
+            onClick={() => { setMode('email'); setValue(''); setStatus('idle'); setFieldError('') }}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all
               ${mode === 'email' ? 'bg-accent text-bg' : 'text-text-2 hover:text-text-1'}`}>
             📧 Email
           </button>
           <button
-            onClick={() => { setMode('whatsapp'); setValue(''); setStatus('idle') }}
+            onClick={() => { setMode('whatsapp'); setValue(''); setStatus('idle'); setFieldError('') }}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all
               ${mode === 'whatsapp' ? 'bg-accent text-bg' : 'text-text-2 hover:text-text-1'}`}>
             💬 WhatsApp
@@ -74,17 +136,25 @@ export default function NewsletterSignup() {
 
         {/* Input */}
         <div className="flex gap-3 flex-col sm:flex-row">
-          <input
-            type={mode === 'email' ? 'email' : 'tel'}
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
-            placeholder={mode === 'email'
-              ? 'Enter your email address'
-              : 'Enter your WhatsApp number e.g +2348012345678'
-            }
-            className="flex-1 bg-surface border border-border rounded-xl px-4 py-3 text-text-1 placeholder-text-3 focus:outline-none focus:border-accent transition-colors text-sm"
-          />
+          <div className="flex-1">
+            <input
+              type={mode === 'email' ? 'email' : 'tel'}
+              value={value}
+              onChange={e => handleChange(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
+              placeholder={mode === 'email'
+                ? 'Enter your email address'
+                : 'Enter WhatsApp number e.g +2348012345678'
+              }
+              maxLength={mode === 'email' ? 254 : 20}
+              autoComplete={mode === 'email' ? 'email' : 'tel'}
+              className={`w-full bg-surface border rounded-xl px-4 py-3 text-text-1 placeholder-text-3 focus:outline-none transition-colors text-sm
+                ${fieldError ? 'border-critical focus:border-critical' : 'border-border focus:border-accent'}`}
+            />
+            {fieldError && (
+              <p className="text-critical text-xs mt-1 text-left">{fieldError}</p>
+            )}
+          </div>
           <button
             onClick={handleSubscribe}
             disabled={status === 'loading' || !value.trim()}
