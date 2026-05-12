@@ -56,27 +56,38 @@ export default function AdminPage() {
     setArticleCount(count ?? 0)
   }
 
-  const loginSchema = z.string()
-    .min(1, 'Password is required')
-    .max(100, 'Password too long')
-    .refine(val => !/<|>|script/i.test(val), {
-      message: 'Invalid characters detected'
-    })
+  // ── Password sanitization ────────────────────────────────────
+  const PASSWORD_REGEX = {
+    dangerous:  /[<>'"`;\\\/\x00-\x1f\x7f]/g,
+    xss:        /(javascript:|data:|on\w+\s*=|<\s*script)/gi,
+    maxLength:  100,
+  }
+
+  function sanitizePassword(raw: string): string {
+    return raw
+      .trim()
+      .slice(0, PASSWORD_REGEX.maxLength)
+      .replace(PASSWORD_REGEX.dangerous, '')
+      .replace(PASSWORD_REGEX.xss, '')
+  }
 
   function handleLogin() {
-    try {
-      const sanitized = loginSchema.parse(password)
-      if (sanitized === ADMIN_PASSWORD) {
-        sessionStorage.setItem('admin_auth', 'true')
-        setAuthenticated(true)
-        setError('')
-      } else {
-        setError('Incorrect password. Try again.')
-      }
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        setError(err.issues[0].message)
-      }
+    const sanitized = sanitizePassword(password)
+
+    if (!sanitized) {
+      setError('Password cannot be empty')
+      return
+    }
+    if (sanitized.length > 100) {
+      setError('Password is too long')
+      return
+    }
+    if (sanitized === ADMIN_PASSWORD) {
+      sessionStorage.setItem('admin_auth', 'true')
+      setAuthenticated(true)
+      setError('')
+    } else {
+      setError('Incorrect password. Try again.')
     }
   }
 
@@ -129,12 +140,27 @@ export default function AdminPage() {
             <div className="mb-4">
               <label className="text-text-2 text-sm mb-2 block">Password</label>
               <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                placeholder="Enter admin password"
-                className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text-1 placeholder-text-3 focus:outline-none focus:border-accent transition-colors"
+              type="password"
+              value={password}
+              onChange={e => setPassword(
+                e.target.value
+                  .slice(0, 100)
+                  .replace(/[<>'"`;\\\/\x00-\x1f\x7f]/g, '')
+              )}
+              onPaste={e => {
+                e.preventDefault()
+                const pasted = e.clipboardData.getData('text')
+                setPassword(
+                  pasted
+                    .slice(0, 100)
+                    .replace(/[<>'"`;\\\/\x00-\x1f\x7f]/g, '')
+                )
+              }}
+              onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              placeholder="Enter admin password"
+              maxLength={100}
+              autoComplete="current-password"
+              className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text-1 placeholder-text-3 focus:outline-none focus:border-accent transition-colors"
               />
             </div>
             {error && <p className="text-critical text-xs mb-4">{error}</p>}

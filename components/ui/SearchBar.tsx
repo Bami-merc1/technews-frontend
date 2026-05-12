@@ -6,11 +6,29 @@ interface SearchBarProps {
   placeholder?: string
 }
 
+// Strip dangerous characters as user types
+function sanitizeKeystroke(raw: string): string {
+  return raw
+    .slice(0, 100)
+    .replace(/[<>'"`;\\\/\x00-\x1f\x7f]/g, '')
+    .replace(/(javascript:|data:|on\w+\s*=)/gi, '')
+}
+
 export default function SearchBar({
   value,
   onChange,
-  placeholder = 'Search articles, topics, CVEs...'
+  placeholder = 'Search articles, topics, CVEs...',
 }: SearchBarProps) {
+  function handleChange(raw: string) {
+    onChange(sanitizeKeystroke(raw))
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text')
+    onChange(sanitizeKeystroke(pasted))
+  }
+
   return (
     <div className="relative">
       <svg
@@ -24,11 +42,14 @@ export default function SearchBar({
       <input
         type="text"
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={e => handleChange(e.target.value)}
+        onPaste={handlePaste}
         placeholder={placeholder}
         maxLength={100}
         autoComplete="off"
         spellCheck={false}
+        autoCorrect="off"
+        autoCapitalize="off"
         className="w-full bg-surface border border-border rounded-xl pl-12 pr-10 py-4 text-text-1 placeholder-text-3 focus:outline-none focus:border-accent transition-colors text-base"
       />
       {value && (

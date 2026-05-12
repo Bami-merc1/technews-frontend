@@ -22,18 +22,28 @@ export default function SearchPage() {
   const [results, setResults]               = useState<Article[]>([])
   const [loading, setLoading]               = useState(false)
 
+  // ── Regex sanitization ──────────────────────────────────────
+  const SEARCH_REGEX = {
+    dangerous:    /[<>'"`;\\\/\x00-\x1f\x7f]/g,
+    sqlInjection: /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b|--|;|\/\*|\*\/)/gi,
+    xss:          /(javascript:|data:|vbscript:|on\w+\s*=|<\s*script|<\s*img|<\s*svg)/gi,
+    allowedChars: /[^a-zA-Z0-9\s\-_.,:@#&()']/g,
+  }
+
+  function sanitizeSearch(raw: string): string {
+    return raw
+      .trim()
+      .slice(0, 100)
+      .replace(SEARCH_REGEX.dangerous, '')
+      .replace(SEARCH_REGEX.sqlInjection, '')
+      .replace(SEARCH_REGEX.xss, '')
+      .replace(SEARCH_REGEX.allowedChars, '')
+  }
+
   const search = useCallback(async () => {
     setLoading(true)
     try {
-      // Sanitize query — strip any HTML or injection attempts
-      const sanitizedQuery = query
-        .trim()
-        .replace(/</g, '')
-        .replace(/>/g, '')
-        .replace(/'/g, '')
-        .replace(/"/g, '')
-        .replace(/;/g, '')
-        .slice(0, 100) // max 100 chars
+      const sanitizedQuery = sanitizeSearch(query)
 
       let q = supabase
         .from('articles')
