@@ -41,7 +41,7 @@ export default async function HomePage() {
           </h1>
           <p className="text-text-2 text-xl max-w-2xl leading-relaxed mb-10">
             Real-time summaries of the latest in AI, cybersecurity, software,
-            blockchain, data breaches and hardware — aggregated and written autonomously.
+            blockchain, data breaches and hardware_aggregated and written autonomously.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link href="/security-hub"
