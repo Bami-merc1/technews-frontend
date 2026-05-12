@@ -2,71 +2,107 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { z } from 'zod'
 
 type Mode = 'email' | 'whatsapp'
 
-// ── Validation schemas ──────────────────────────────────────────
-const emailSchema = z
-  .string()
-  .min(1, 'Email is required')
-  .email('Please enter a valid email address')
-  .max(254, 'Email is too long')
-  .refine(val => !/<|>|script|javascript|on\w+=/i.test(val), {
-    message: 'Invalid characters detected',
-  })
+// ── Regex patterns ──────────────────────────────────────────────
+const REGEX = {
+  // RFC 5321 compliant email — blocks injection characters
+  email: /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/,
 
-const whatsappSchema = z
-  .string()
-  .min(7,  'Phone number is too short')
-  .max(20, 'Phone number is too long')
-  .refine(val => /^\+?[0-9\s\-()]+$/.test(val), {
-    message: 'Please enter a valid phone number',
-  })
-  .transform(val => val.replace(/\s|-|\(|\)/g, ''))
+  // WhatsApp — digits, plus, spaces, hyphens, parentheses only
+  whatsapp: /^\+?[0-9]{7,15}$/,
 
-function sanitize(input: string): string {
-  return input
+  // Dangerous characters to strip from any input
+  dangerous: /[<>'"`;\\\/\x00-\x1f\x7f]/g,
+
+  // SQL injection patterns
+  sqlInjection: /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b|--|;|\/\*|\*\/)/gi,
+
+  // XSS patterns
+  xss: /(javascript:|data:|vbscript:|on\w+\s*=|<\s*script|<\s*img|<\s*svg|<\s*iframe)/gi,
+}
+
+// ── Sanitize raw input ──────────────────────────────────────────
+function sanitizeInput(value: string): string {
+  return value
     .trim()
+    .slice(0, 300)                          // hard length cap
+    .replace(REGEX.dangerous, '')           // strip dangerous chars
+    .replace(REGEX.sqlInjection, '')        // strip SQL keywords
+    .replace(REGEX.xss, '')                 // strip XSS patterns
+    .replace(/&/g,  '&amp;')               // HTML encode
     .replace(/</g,  '&lt;')
     .replace(/>/g,  '&gt;')
     .replace(/"/g,  '&quot;')
     .replace(/'/g,  '&#x27;')
-    .replace(/\//g, '&#x2F;')
+}
+
+// ── Validate after sanitization ─────────────────────────────────
+function validateEmail(value: string): string | null {
+  if (!value)                  return 'Email address is required'
+  if (value.length > 254)      return 'Email address is too long'
+  if (!REGEX.email.test(value)) return 'Please enter a valid email address'
+  if (value.includes('..'))    return 'Email address contains consecutive dots'
+  return null
+}
+
+function validateWhatsApp(value: string): string | null {
+  // Strip formatting before validation
+  const cleaned = value.replace(/[\s\-()]/g, '')
+  if (!cleaned)                      return 'WhatsApp number is required'
+  if (cleaned.length < 7)            return 'Phone number is too short'
+  if (cleaned.length > 15)           return 'Phone number is too long'
+  if (!REGEX.whatsapp.test(cleaned)) return 'Please enter a valid phone number (digits only)'
+  return null
+}
+
+// ── Allowed characters per field ────────────────────────────────
+function filterKeystroke(value: string, mode: Mode): string {
+  if (mode === 'email') {
+    // Allow only email-safe characters as the user types
+    return value.replace(/[^a-zA-Z0-9._%+\-@]/g, '')
+  }
+  if (mode === 'whatsapp') {
+    // Allow only phone-safe characters as the user types
+    return value.replace(/[^0-9+\s\-()]/g, '')
+  }
+  return value
 }
 
 export default function NewsletterSignup() {
-  const [mode, setMode]       = useState<Mode>('email')
-  const [value, setValue]     = useState('')
-  const [status, setStatus]   = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [message, setMessage] = useState('')
+  const [mode, setMode]             = useState<Mode>('email')
+  const [value, setValue]           = useState('')
+  const [status, setStatus]         = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [message, setMessage]       = useState('')
   const [fieldError, setFieldError] = useState('')
 
-  function handleChange(val: string) {
-    setValue(val)
+  function handleChange(raw: string) {
+    // Filter invalid characters in real time as the user types
+    const filtered = filterKeystroke(raw, mode)
+    setValue(filtered)
+    setFieldError('')
+    setStatus('idle')
+    setMessage('')
+  }
+
+  function handleModeSwitch(newMode: Mode) {
+    setMode(newMode)
+    setValue('')
     setFieldError('')
     setStatus('idle')
     setMessage('')
   }
 
   function validate(): string | null {
-    try {
-      if (mode === 'email') {
-        emailSchema.parse(value)
-      } else {
-        whatsappSchema.parse(value)
-      }
-      return null
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return err.issues[0].message
-      }
-      return 'Invalid input'
-    }
+    const sanitized = sanitizeInput(value)
+    if (mode === 'email')     return validateEmail(sanitized)
+    if (mode === 'whatsapp')  return validateWhatsApp(sanitized)
+    return null
   }
 
   async function handleSubscribe() {
-    // Validate first
+    // Client-side validation
     const validationError = validate()
     if (validationError) {
       setFieldError(validationError)
@@ -76,11 +112,22 @@ export default function NewsletterSignup() {
     setStatus('loading')
 
     try {
-      // Sanitize before storing
-      const sanitizedValue = sanitize(value.trim())
+      // Final sanitization before any database operation
+      const sanitizedValue = sanitizeInput(value)
+
+      // Additional server-side format check before Supabase insert
+      if (mode === 'email' && !REGEX.email.test(sanitizedValue)) {
+        setFieldError('Invalid email format detected after sanitization')
+        setStatus('error')
+        return
+      }
+
+      const cleaned = mode === 'whatsapp'
+        ? sanitizedValue.replace(/[\s\-()]/g, '')
+        : sanitizedValue
 
       const { error } = await supabase.from('subscribers').insert({
-        [mode]: sanitizedValue,
+        [mode]: cleaned,
         type:   mode,
       })
 
@@ -121,13 +168,13 @@ export default function NewsletterSignup() {
         {/* Mode toggle */}
         <div className="flex items-center justify-center gap-2 p-1 bg-surface rounded-xl border border-border mb-6 w-fit mx-auto">
           <button
-            onClick={() => { setMode('email'); setValue(''); setStatus('idle'); setFieldError('') }}
+            onClick={() => handleModeSwitch('email')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all
               ${mode === 'email' ? 'bg-accent text-bg' : 'text-text-2 hover:text-text-1'}`}>
             📧 Email
           </button>
           <button
-            onClick={() => { setMode('whatsapp'); setValue(''); setStatus('idle'); setFieldError('') }}
+            onClick={() => handleModeSwitch('whatsapp')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all
               ${mode === 'whatsapp' ? 'bg-accent text-bg' : 'text-text-2 hover:text-text-1'}`}>
             💬 WhatsApp
@@ -142,17 +189,31 @@ export default function NewsletterSignup() {
               value={value}
               onChange={e => handleChange(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
+              onPaste={e => {
+                // Sanitize pasted content
+                e.preventDefault()
+                const pasted = e.clipboardData.getData('text')
+                handleChange(pasted)
+              }}
               placeholder={mode === 'email'
                 ? 'Enter your email address'
                 : 'Enter WhatsApp number e.g +2348012345678'
               }
               maxLength={mode === 'email' ? 254 : 20}
               autoComplete={mode === 'email' ? 'email' : 'tel'}
+              spellCheck={false}
+              autoCorrect="off"
+              autoCapitalize="off"
               className={`w-full bg-surface border rounded-xl px-4 py-3 text-text-1 placeholder-text-3 focus:outline-none transition-colors text-sm
-                ${fieldError ? 'border-critical focus:border-critical' : 'border-border focus:border-accent'}`}
+                ${fieldError
+                  ? 'border-critical focus:border-critical'
+                  : 'border-border focus:border-accent'
+                }`}
             />
             {fieldError && (
-              <p className="text-critical text-xs mt-1 text-left">{fieldError}</p>
+              <p className="text-critical text-xs mt-1.5 text-left flex items-center gap-1">
+                <span>⚠</span> {fieldError}
+              </p>
             )}
           </div>
           <button
@@ -165,14 +226,14 @@ export default function NewsletterSignup() {
 
         {/* Status message */}
         {message && (
-          <p className={`mt-3 text-sm ${status === 'success' ? 'text-live' : 'text-critical'}`}>
+          <p className={`mt-3 text-sm font-medium ${status === 'success' ? 'text-live' : 'text-critical'}`}>
             {message}
           </p>
         )}
 
         {/* Privacy note */}
         <p className="text-text-3 text-xs mt-4">
-          No spam. Unsubscribe anytime. Your data is never shared.
+          No spam. Unsubscribe anytime. Your data is never shared or sold.
         </p>
 
       </div>
